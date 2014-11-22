@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+
+{% block body %}
+<div class="col-md-12" style="margin-bottom:40px">
+
+{% block graphs %}
+{% endblock %}
+
+  <div class="col-md-12">
+    <hr>
+  </div>
+  <div class="col-md-6">
+    <h2> Edit model notes </h2>
+    <form role="form" id="notes-form">
+      <textarea
+        id="notes-input"
+        oninput="this.editor.update()"
+        class="form-control"
+        rows="10">{% if notes %}{{notes|safe}}{% endif %}</textarea>
+      <hr>
+      <span id="unsaved-changes">
+        <span class='label label-warning col-md-12'>You have unsaved changes!</span>
+      </span>
+      <button id="notes-button" class="btn btn-default form-control">Save</button>
+    </form>
+  </div>
+  <div class="col-md-6">
+    <h2> Model notes</h2>
+    <div id="preview" class="col-md-12">
+    </div>
+  </div>
+</div>
+
+<script src="/static/markdown.min.js"></script>
+<script type="text/javascript">
+
+$(document).ready(function() {
+  var path = "{{path}}";
+
+  function set_up_markdown_preview() {
+    function Editor(input, preview) {
+      this.update = function () {
+        preview.innerHTML = markdown.toHTML(input.value);
+        $('#unsaved-changes').show();
+      };
+      input.editor = this;
+      this.update();
+    }
+    new Editor($("#notes-input")[0], $("#preview")[0]);
+  }
+
+  function save_notes() {
+    var notes = $('#notes-input')[0].value;
+    $.ajax({
+      url: 'notes/',
+      method: 'PUT',
+      data: {'notes': notes},
+      success: function() {$('#unsaved-changes').hide();}
+    });
+    return false;
+  }
+
+  set_up_markdown_preview();
+  $('#unsaved-changes').hide();
+  $('#notes-button').on('click', save_notes)
+
+})
+</script>
+
+{% endblock %}
+

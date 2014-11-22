@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block body %}
+  <style type="text/css">
+    li {
+      margin-top: 15px;
+    }
+  </style>
+    <div class="container col-lg-12">
+    <table class="table">
+    {% for model in models %}
+      <tr class="select-model" model="{{model.model_path}}">
+        <td><a href="/model/{{model.model_path}}">{{model.model_path}}</a></td>
+      </tr>
+    {% endfor %}
+    </table>
+    </div>
+
+{% endblock %}
+

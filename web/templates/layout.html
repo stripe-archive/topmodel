@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stripe's Next Top Model</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+    <style type="text/css">
+      code {
+        white-space: normal;
+      }
+      button {
+        margin: 12px;
+      }
+      .selected {
+        background-color: #FFe0c0;
+      }
+
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/">Stripe's Next Top Model</a>
+    </div>
+    {% if not precision_recall_curve %}
+    <div class="pull-right btn-group">
+      <button id="compare-button" class="btn-mini">Compare Selected</button>
+    </div>
+    {% endif %}
+  </div>
+</nav>
+
+
+    <div class="container">
+<div class="row">
+<div class="col-md-12">
+
+    {% block body %}
+    {% endblock %}
+
+</div>
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script>
+
+function get_selected_models() {
+  var selected = [];
+  $('.selected').each(function() {
+    selected.push($(this).attr('model'));
+  });
+  return selected;
+}
+
+$('#compare-button').on('click', function() {
+  var models = get_selected_models();
+  if (models.length <= 1) {
+    alert("Please select at each two models to compare.");
+    return;
+  }
+  window.location = '/compare?model[]='+models.join('&model[]=');
+});
+
+$('.select-model').on('click', function(e) {
+  var t = $(e.target);
+  if (!t.hasClass('select-model')) {
+    t = t.parent();
+  }
+  if (t.hasClass('select-model')) {
+    t.toggleClass('selected');
+  }
+});
+
+</script>
+</div>
+</body>
+</html>
+

@@ -1,0 +1,60 @@
+{% extends "results_layout.html" %}
+
+{% block graphs %}
+
+<div class="row">
+  <div class="col-md-6">
+    <h2> Precision/Recall curve </h2>
+    {{precision_recall_curve|safe}}
+  </div>
+
+  <div class="col-md-6">
+    <h2> ROC curve <small> AUC: {{"%.3f" % auc}} </small> </h2>
+    {{roc_curve|safe}}
+  </div>
+
+  <div class="col-md-6">
+    <h2> Score distribution </h2>
+    {{score_distribution|safe}}
+  </div>
+
+  <div class="col-md-6">
+    <h2> Marginal Precision </h2>
+    {{marginal_precision_curve|safe}}
+  </div>
+
+  <div class="col-md-6">
+    <h2> Threshold graph </h2>
+    {{threshold_graph|safe}}
+  </div>
+
+  <div class="col-md-6">
+    <h2>Decomposed Brier Score</h2>
+    {{brier|safe}}
+  </div>
+
+  {% if precision_over_time %}
+  <div class="col-md-6">
+    <h2> Precision Over Time</h2>
+    {{precision_over_time|safe}}
+  </div>
+  {% endif %}
+
+  {% if recall_over_time %}
+  <div class="col-md-6">
+    <h2> Recall Over Time</h2>
+    {{recall_over_time|safe}}
+  </div>
+  {% endif %}
+</div>
+<hr>
+
+<div class="row">
+  <div class="col-md-6">
+    <h2> Thresholds </h2>
+    {{threshold_table|safe}}
+  </div>
+</div>
+
+{% endblock %}
+

@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block body %}
+
+<div class="row">
+  <div>
+    <h2> Precision/Recall curve </h2>
+    {{precision_recall_curve|safe}}
+  </div>
+
+  <div>
+    <h2> ROC curve </h2>
+    {{roc_curve|safe}}
+  </div>
+
+</div>
+
+{% endblock %}
+
