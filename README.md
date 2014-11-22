@@ -18,6 +18,13 @@ Here are the graphs topmodel will give you for any binary classifier:
 
 ![ROC curve](http://i.imgur.com/tunfpcu.png)
 
+We also use
+[bootstrapping](http://en.wikipedia.org/wiki/Bootstrapping_%28statistics%29#Methods_for_bootstrap_confidence_intervals)
+to show the uncertainty on ROC curves and precision/recall curves. Here's an
+example:
+
+![ROC curve with bootstrapping](http://i.imgur.com/dc21r9j.png)
+
 #### Marginal precision
 
 The idea here is that among all items with score 0.9, you expect 90% of them to
