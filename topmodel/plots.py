@@ -14,11 +14,8 @@ def box_brier(cached_data):
     for k in cached_data[0]['brier']:
         tmp[k] = [x['brier'][k] for x in cached_data]
 
-    # added here cause i didn't know where else
-    logloss = [x['logloss'] for x in cached_data]
-
-    val = [tmp['brier'], tmp['rel'], tmp['res'], tmp['unc'], logloss]
-    lbl = ["Brier", "Reliability", "Resolution", "Uncertainty", "Log Loss"]
+    val = [tmp['brier'], tmp['rel'], tmp['res'], tmp['unc']]
+    lbl = ["Brier", "Reliability", "Resolution", "Uncertainty"]
     return utf8_decode(plot_helpers.plot_boxplot(val, lbl))
 
 
