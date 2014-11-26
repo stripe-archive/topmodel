@@ -87,7 +87,7 @@ Then start topmodel with
 
 ## How to add a model to topmodel
 
-1. Create a TSV with columns 'pred_score' and 'actual'. Save it to `your_model_name.tsv`
+1. Create a TSV with columns 'pred_score' and 'actual'. Save it to `your_model_name.tsv`. The columns should be separated by tabs. In each row:
    * `actual` should be 0 or 1 (True/False also work)
    * `pred_score` should be the score the model determined. 
    * See the examples in `example_data/`
