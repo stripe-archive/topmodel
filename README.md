@@ -91,6 +91,16 @@ Then start topmodel with
    * `actual` should be 0 or 1 (True/False also work)
    * `pred_score` should be the score the model determined. 
    * See the examples in `example_data/`
+   * For example:
+   
+    ```
+    actual	pred-score
+    False	0.2
+    True	0.8
+    True	0.7
+    False	0.3
+    ```
+   
 2. Copy the TSV to S3 at `s3://your-s3-bucket/your_model_name/scores.tsv`, or locally to `data/your_model_name/scores.tsv`
 3. You're done! Your model should appear at http://localhost:9191/ if you reload.
 
