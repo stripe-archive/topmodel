@@ -121,7 +121,7 @@ There's example data to test on in `data/test`.
 
 * Julia Evans [http://twitter.com/b0rk](http://twitter.com/b0rk)
 * Chris Wu [http://github.com/cwu](http://github.com/cwu)
-* George Hotz [http://twitter.com/geohotus](http://twitter.com/geohotus)
+* George Hotz [http://geohot.com](http://geohot.com)
 
 ## License
 
