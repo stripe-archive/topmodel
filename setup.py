@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name='topmodel',
-      version='0.1.1',
+      version='0.1.2',
       description='Model evaluation',
       author='Julia Evans',
       author_email='julia@stripe.com',
