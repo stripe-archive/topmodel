@@ -1,9 +1,7 @@
 from flask import render_template, g, request, redirect
 
-from topmodel.model_data import ModelDataManager
 from topmodel import plots
 from topmodel.hmetrics import auc
-from topmodel.model_data import ModelData
 from web import app
 
 import matplotlib.pyplot as plt
@@ -11,8 +9,8 @@ import matplotlib.pyplot as plt
 
 @app.route("/")
 def home():
-    model_data_manager = ModelDataManager(g.file_system)
-    return render_template("index.html", models=model_data_manager.list())
+    model_paths = sorted(g.model_data_manager.models.keys())
+    return render_template("index.html", model_paths=model_paths)
 
 
 @app.route("/compare")
@@ -20,7 +18,7 @@ def compare():
     models = request.args.getlist('model[]')
     cached_datas = []
     for path in models:
-        model_data = ModelData(g.file_system, path)
+        model_data = g.model_data_manager.models[path]
         cached_datas.append(model_data.get_metrics(10))
 
     _, ax = plt.subplots(figsize=(12, 6))
@@ -40,9 +38,8 @@ def compare():
 
 @app.route("/model/<path:path>/")
 def training(path):
-    model_data = ModelData(g.file_system, path)
+    model_data = g.model_data_manager.models[path]
     cached_data = model_data.get_metrics(50)
-    # print cached_data
 
     context = {
         'precision_recall_curve': plots.precision_recall_curve(cached_data),
@@ -54,7 +51,7 @@ def training(path):
 
         'brier': plots.box_brier(cached_data),
         'auc': auc(cached_data[0]['fprs'], cached_data[0]['recalls']),
-        'notes': ModelData(g.file_system, path).get_notes(),
+        'notes': model_data.get_notes(),
         'path': path,
     }
     return render_template("results.html", **context)
@@ -68,5 +65,6 @@ def delete_path(path):
 
 @app.route("/model/<path:path>/notes/", methods=['PUT'])
 def update_notes(path):
-    ModelData(g.file_system, path).set_notes(request.form['notes'])
+    model_data = g.model_data_manager.models[path]
+    model_data.set_notes(request.form['notes'])
     return "Success!"
