@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use("Agg")  # Must be called before importing pyplot
 
 from topmodel.file_system import LocalFileSystem, S3FileSystem
+from topmodel.model_data import ModelDataManager
 from topmodel import settings
 
 # Make plots pretty
@@ -21,5 +22,6 @@ def before_request():
         g.file_system = S3FileSystem(config['bucket'],
                                      config['aws_access_key'],
                                      config['aws_secret_key'])
+    g.model_data_manager = ModelDataManager(g.file_system)
 
 import web.views.pages

@@ -17,7 +17,7 @@ class FileSystem(object):
     def write_file(self, path, data):
         raise NotImplemented
 
-    def list(self):
+    def list(self, path):
         raise NotImplemented
 
     def remove(self, path):
@@ -45,8 +45,8 @@ class S3FileSystem(object):
             key = self.bucket.new_key(path)
         key.set_contents_from_string(data)
 
-    def list(self):
-        return [key.name for key in self.bucket.list()]
+    def list(self, path=''):
+        return [key.name for key in self.bucket.list(path)]
 
     def remove(self, path):
         keys = self.bucket.get_all_keys(prefix=path)
@@ -75,10 +75,11 @@ class LocalFileSystem(object):
         with open(self.abspath(path), 'w') as f:
             return f.write(data)
 
-    def list(self):
+    def list(self, path=''):
+        walker = os.walk(os.path.join(self.basedir, path))
         return [
             os.path.join(dirpath, filename)[len(self.basedir + '/'):]
-            for dirpath, _, filenames in os.walk(self.basedir)
+            for dirpath, _, filenames in walker
             for filename in filenames
         ]
 
