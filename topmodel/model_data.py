@@ -3,6 +3,7 @@ import os
 import operator
 import sys
 import json
+import time
 
 import pandas as pd
 import numpy as np
@@ -56,6 +57,9 @@ class ModelData(object):
         self.model_path = model_path
         self.file_system = file_system
         self.data_frame = None
+
+    def get_created_time(self):
+        return time.ctime(os.path.getctime(self.model_path))
 
     def get_metrics(self, bootstrap=False):
         def bootstrap_histogram(hist):
@@ -206,3 +210,6 @@ class BenchmarkedModelData(ModelData):
 
         self.check_alt_format()
         return self.data_frame
+
+    def get_created_time(self):
+        return time.ctime(os.path.getctime(self.model_path))
