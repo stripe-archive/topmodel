@@ -102,7 +102,7 @@ def plot_xy_bootstrapped(xs, ys, thresholds, xlabel, ylabel, labels=False, label
     plt.tight_layout()
     if label is not None:
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1])
+        ax.legend(handles[::-1], labels[::-1], loc='best')
     return save_image()
 
 
