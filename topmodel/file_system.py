@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import time
 
 # for s3 from python
 from boto.s3.connection import S3Connection
@@ -20,11 +21,14 @@ class FileSystem(object):
     def list(self, path):
         raise NotImplemented
 
+    def list_name_modified(self, path):
+        raise NotImplemented
+
     def remove(self, path):
         raise NotImplemented
 
 
-class S3FileSystem(object):
+class S3FileSystem(FileSystem):
 
     def __init__(self, bucket_name, aws_access_key_id, aws_secret_access_key, security_token=None):
         conn = S3Connection(
@@ -48,12 +52,18 @@ class S3FileSystem(object):
     def list(self, path=''):
         return [key.name for key in self.bucket.list(path)]
 
+    def list_name_modified(self, path=''):
+        model_names_and_modified = {}
+        for key in self.bucket.list(path):
+            model_names_and_modified[key.name] = key.last_modified
+        return model_names_and_modified
+
     def remove(self, path):
         keys = self.bucket.get_all_keys(prefix=path)
         self.bucket.delete_keys(keys)
 
 
-class LocalFileSystem(object):
+class LocalFileSystem(FileSystem):
 
     def __init__(self, basedir=None):
         if basedir is None:
@@ -82,6 +92,13 @@ class LocalFileSystem(object):
             for dirpath, _, filenames in walker
             for filename in filenames
         ]
+
+    def list_name_modified(self, path=''):
+        model_names_and_modified = {}
+        filenames = self.list()
+        for name in filenames:
+            model_names_and_modified[name] = time.ctime(os.path.getctime(name))
+        return model_names_and_modified
 
     def remove(self, path):
         subprocess.check_call(["rm", "-r", self.abspath(path)])

@@ -3,6 +3,7 @@ import os
 import operator
 import sys
 import json
+import time
 
 import pandas as pd
 import numpy as np
@@ -27,24 +28,41 @@ class ModelDataManager(object):
     def __init__(self, file_system):
         self.file_system = file_system
         self.models = {}
+        self.names_and_updated = {}
 
-        scores = [fp for fp in self.file_system.list()
-                  if fp.endswith(SCORES_FILE)]
-        for filepath in scores:
+        all_models_with_times = self.file_system.list_name_modified().items()
+        scores_hash, scores_bm_hash = self.get_hash_of_models(all_models_with_times)
+
+        for filepath, time in scores_hash.items():
             basedir, _ = os.path.split(filepath)
             model_data = ModelData(self.file_system, basedir)
             self.models[basedir] = model_data
+            self.names_and_updated[basedir] = time
 
-        actuals = [fp for fp in self.file_system.list()
-                   if fp.endswith(ACTUALS_FILE)]
-        for path in actuals:
+        for filepath, time in scores_bm_hash.items():
+            model_path, _ = os.path.split(filepath)
+            model_data = BenchmarkedModelData(self.file_system, model_path)
+            self.models[model_path] = model_data
+            basedir = os.path.split(model_path)[0]
+            self.names_and_updated[basedir] = time
+
+    def get_hash_of_models(self, all_models_with_times):
+        scores_hash, actuals_hash, scores_bm_hash = {}, {}, {}
+
+        for k, v in all_models_with_times:
+            if k.endswith(SCORES_FILE):
+                scores_hash[k] = v
+
+        for k, v in all_models_with_times:
+            if k.endswith(ACTUALS_FILE):
+                actuals_hash[k] = v
+        for path, time in actuals_hash.items():
             basedir = os.path.split(path)[0]
-            scores_bm = [p for p in self.file_system.list(basedir)
-                         if p.endswith(SCORES_BM_FILE)]
-            for fp in scores_bm:
-                model_path, _ = os.path.split(fp)
-                model_data = BenchmarkedModelData(self.file_system, model_path)
-                self.models[model_path] = model_data
+            for k, v in self.file_system.list_name_modified(basedir).items():
+                if k.endswith(SCORES_BM_FILE):
+                    scores_bm_hash[k] = v
+
+        return scores_hash, scores_bm_hash
 
     def search(self, target_model):
         return filter(lambda model: target_model in model.model_path, self.list())
