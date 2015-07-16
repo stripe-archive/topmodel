@@ -30,6 +30,10 @@
     <div id="preview" class="col-md-12">
     </div>
   </div>
+  <div class="col-md-6">
+    <h2> Model metadata</h2>
+      <pre>{% if model_metadata %}{{model_metadata|safe}}{% endif %}</pre>
+  </div>
 </div>
 
 <script src="/static/markdown.min.js"></script>

@@ -51,6 +51,7 @@ def training(path):
 
         'auc': auc(cached_data[0]['fprs'], cached_data[0]['recalls']),
         'notes': model_data.get_notes(),
+        'model_metadata': model_data.get_metadata(),
         'path': path,
     }
     return render_template("results.html", **context)

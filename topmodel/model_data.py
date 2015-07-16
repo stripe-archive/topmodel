@@ -19,6 +19,7 @@ SCORES_BM_FILE = 'scores_bm.tsv'
 
 HISTOGRAM_FILE = 'histogram.json'
 NOTES_FILE = "notes.txt"
+METATDATA_FILE = "metadata.txt"
 
 BIN_COUNT = 100
 
@@ -182,6 +183,10 @@ class ModelData(object):
             df.to_csv(f, sep='\t', index=False)
             scores_path = os.path.join(self.model_path, SCORES_FILE)
             self.file_system.write_file(scores_path, f.getvalue())
+
+    def get_metadata(self):
+        metadata_path = os.path.join(self.model_path, METATDATA_FILE)
+        return self.file_system.read_file(metadata_path)
 
     def get_notes(self):
         notes_path = os.path.join(self.model_path, NOTES_FILE)
