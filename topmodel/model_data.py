@@ -100,7 +100,6 @@ class ModelData(object):
                 # extra metrics
                 'marginal_precisions': hmetrics.marginal_precisions(hist),
                 # single number metrics
-                'brier': hmetrics.brier(hist),
                 'logloss': hmetrics.logloss(hist)
             }
 

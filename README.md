@@ -33,14 +33,6 @@ to the actual rate -- the closer it is to a straight line, the better.
 
 ![Marginal precision](http://i.imgur.com/yeqpD8A.png)
 
-#### Brier decomposition
-
-These are a set of metrics that measure, among other things, how close the
-marginal precision is to a straight line. 
-[Read more about decomposing the Brier score](http://en.wikipedia.org/wiki/Brier_score#3-component_decomposition)
-
-![Brier](http://i.imgur.com/47fTU9s.png)
-
 
 #### Score distribution
 
@@ -89,10 +81,10 @@ Then start topmodel with
 
 1. Create a TSV with columns 'pred_score' and 'actual'. Save it to `your_model_name.tsv`. The columns should be separated by tabs. In each row:
    * `actual` should be 0 or 1 (True/False also work)
-   * `pred_score` should be the score the model determined. 
+   * `pred_score` should be the score the model determined.
    * See the examples in `example_data/`
    * For example:
-   
+
     ```
     actual	pred-score
     False	0.2
@@ -100,7 +92,7 @@ Then start topmodel with
     True	0.7
     False	0.3
     ```
-   
+
 2. Copy the TSV to S3 at `s3://your-s3-bucket/your_model_name/scores.tsv`, or locally to `data/your_model_name/scores.tsv`
 3. You're done! Your model should appear at http://localhost:9191/ if you reload.
 
