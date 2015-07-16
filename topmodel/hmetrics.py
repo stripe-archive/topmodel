@@ -41,26 +41,6 @@ def marginal_precisions(hist):
     return map(lambda x: x[0] * 1.0 / x[1] if x[1] != 0 else None, zip(hist['trues'], hist['totals']))
 
 
-def brier(hist):
-    N = sum(hist['totals'])
-    base_rate = sum(hist['trues']) * 1.0 / N
-
-    unc = base_rate * (1.0 - base_rate)
-
-    rel = 0.0
-    res = 0.0
-    for i in range(len(hist['probs'])):
-        if hist['totals'][i] > 0:
-            ok = (hist['trues'][i] * 1.0 / hist['totals'][i])
-            rel += hist['totals'][i] * (hist['probs'][i] - ok) ** 2
-            res += hist['totals'][i] * (ok - base_rate) ** 2
-    rel /= N
-    res /= N
-
-    # whole brier score
-    return {"rel": rel, "res": res, "unc": unc, "brier": rel - res + unc}
-
-
 def logloss(hist):
     loss = 0.0
     N = sum(hist['totals'])

@@ -50,7 +50,6 @@ def training(path):
         'threshold_graph': plots.thresholds_graph(cached_data[0]),
         'threshold_table': plots.thresholds_table(cached_data[0]),
 
-        'brier': plots.box_brier(cached_data),
         'auc': auc(cached_data[0]['fprs'], cached_data[0]['recalls']),
         'notes': model_data.get_notes(),
         'path': path,

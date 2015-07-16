@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker
+from mpld3 import plugins, save_html
 
 
 def make_points_far(xs, ys, thresholds, min_dist=0.03):
@@ -83,16 +84,23 @@ def plot_xy(xs, ys, thresholds, xlabel, ylabel, labels=True, labels_left=False,
     return save_image()
 
 
+def pretty_point(coord):
+    return "0.0" if (coord is None) else ("%.2f" % coord)
+
+
 def plot_xy_bootstrapped(xs, ys, thresholds, xlabel, ylabel, labels=False, labels_left=False, ax=None, label=None, **plot_kwargs):
     if ax is None:
         fig, ax = plt.subplots()
     for i in range(1, len(xs)):
         ax.plot(xs[i], ys[i], '-', alpha=0.3)
     (xs_, ys_, thresholds_) = make_points_far(xs[0], ys[0], thresholds)
+    label_text = ["Threshold: %s (%s, %s)" % (t, pretty_point(x), pretty_point(y)) for (x, y, t) in zip(xs_, ys_, thresholds_)]
     if label is None:
-        ax.plot(xs_, ys_, '-o', **plot_kwargs)
+        scatter = ax.plot(xs_, ys_, '-o', **plot_kwargs)
+        plugins.connect(fig, plugins.PointHTMLTooltip(scatter[0], label_text))
     else:
-        ax.plot(xs_, ys_, '-o', label=label, **plot_kwargs)
+        scatter = ax.plot(xs_, ys_, '-o', label=label, **plot_kwargs)
+        plugins.connect(fig, plugins.PointHTMLTooltip(scatter[0], label_text))
     if labels:
         draw_labels(ax, xs_, ys_, thresholds_, labels_left=labels_left)
     plt.xlim(0, 1)
@@ -155,6 +163,6 @@ def plot_absolute_score_histogram(thresholds, counts, counts2, xlabel, ax=None):
 
 def save_image(ax=None):
     image_data = StringIO()
-    plt.savefig(image_data, format='svg', ax=ax)
+    save_html(plt.gcf(), image_data)
     image_data.seek(0)
     return image_data

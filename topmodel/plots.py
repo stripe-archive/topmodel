@@ -9,16 +9,6 @@ import matplotlib.pyplot as plt
 from topmodel import plot_helpers
 
 
-def box_brier(cached_data):
-    tmp = {}
-    for k in cached_data[0]['brier']:
-        tmp[k] = [x['brier'][k] for x in cached_data]
-
-    val = [tmp['brier'], tmp['rel'], tmp['res'], tmp['unc']]
-    lbl = ["Brier", "Reliability", "Resolution", "Uncertainty"]
-    return utf8_decode(plot_helpers.plot_boxplot(val, lbl))
-
-
 def _metrics_table(cached_data):
     count = np.array(cached_data['score_distribution'])
     total = count.sum()
