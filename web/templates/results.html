@@ -24,8 +24,13 @@
   </div>
 
   <div class="col-md-6">
-    <h2> Score distribution </h2>
+    <h2> Log score distribution </h2>
     {{score_distribution|safe}}
+  </div>
+
+  <div class="col-md-6">
+    <h2> Absolute score distribution</h2>
+    {{absolute_score_distribution|safe}}
   </div>
 
   {% if precision_over_time %}
