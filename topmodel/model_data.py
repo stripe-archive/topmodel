@@ -43,8 +43,7 @@ class ModelDataManager(object):
             model_path, _ = os.path.split(filepath)
             model_data = BenchmarkedModelData(self.file_system, model_path)
             self.models[model_path] = model_data
-            basedir = os.path.split(model_path)[0]
-            self.names_and_updated[basedir] = time
+            self.names_and_updated[model_path] = time
 
     def get_hash_of_models(self, all_models_with_times):
         scores_hash, actuals_hash, scores_bm_hash = {}, {}, {}
