@@ -111,13 +111,38 @@ def plot_scores_histogram_log(thresholds, counts, counts2, xlabel, ax=None):
     # First graph
     if ax is None:
         _, ax = plt.subplots()
-    plt.bar(thresholds, counts, width=thresholds[1] - thresholds[0],
-            log=True, label="All items")
-    plt.bar(thresholds, counts2, width=thresholds[1] - thresholds[0],
+    falses = [i - j for i, j in zip(counts, counts2)]
+    width = (thresholds[1] - thresholds[0])/2
+    offset = [i + width for i in thresholds]
+    plt.bar(offset, falses, width=width,
+            log=True, label="False items")
+    plt.bar(thresholds, counts2, width=width,
             log=True, color="purple", label="True items")
     plt.grid(False)
     ax.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
     ax.yaxis.get_major_formatter().set_scientific(False)
+    # Write to image
+    image_data = StringIO()
+    plt.xlim((0.0, 1.0))
+    plt.xlabel(xlabel)
+    plt.legend()
+    plt.savefig(image_data, format='svg')
+    image_data.seek(0)
+    return image_data
+
+
+def plot_absolute_score_histogram(thresholds, counts, counts2, xlabel, ax=None):
+    plt.figure()
+    # First graph
+    if ax is None:
+        _, ax = plt.subplots()
+    falses = [i - j for i, j in zip(counts, counts2)]
+    width = thresholds[1] - thresholds[0]
+    plt.bar(thresholds, falses , width=width,
+            log=False, label="False items")
+    plt.bar(thresholds, counts2, width=width,
+            log=False, color="purple", label="True items")
+    plt.grid(False)
     # Write to image
     image_data = StringIO()
     plt.xlim((0.0, 1.0))

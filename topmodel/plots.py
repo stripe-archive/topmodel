@@ -81,3 +81,10 @@ def score_distribution(cached_data):
         cached_data['trues'],
         'Score')
     return utf8_decode(image_data)
+
+def absolute_score_distribution(cached_data):
+    image_data = plot_helpers.plot_absolute_score_histogram(
+        cached_data['thresholds'], cached_data['score_distribution'],
+        cached_data['trues'],
+        'Score')
+    return utf8_decode(image_data)
