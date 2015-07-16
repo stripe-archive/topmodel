@@ -114,17 +114,17 @@ def plot_xy_bootstrapped(xs, ys, thresholds, xlabel, ylabel, labels=False, label
     return save_image()
 
 
-def plot_scores_histogram_log(thresholds, counts, counts2, xlabel, ax=None):
+def plot_scores_histogram_log(thresholds, all_counts, true_counts, xlabel, ax=None):
     plt.figure()
     # First graph
     if ax is None:
         _, ax = plt.subplots()
-    falses = [i - j for i, j in zip(counts, counts2)]
+    falses = [i - j for i, j in zip(all_counts, true_counts)]
     width = (thresholds[1] - thresholds[0])/2
     offset = [i + width for i in thresholds]
     plt.bar(offset, falses, width=width,
             log=True, label="False items")
-    plt.bar(thresholds, counts2, width=width,
+    plt.bar(thresholds, true_counts, width=width,
             log=True, color="purple", label="True items")
     plt.grid(False)
     ax.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
@@ -133,29 +133,30 @@ def plot_scores_histogram_log(thresholds, counts, counts2, xlabel, ax=None):
     image_data = StringIO()
     plt.xlim((0.0, 1.0))
     plt.xlabel(xlabel)
-    plt.legend()
+    plt.legend(loc='best')
     plt.savefig(image_data, format='svg')
     image_data.seek(0)
     return image_data
 
 
-def plot_absolute_score_histogram(thresholds, counts, counts2, xlabel, ax=None):
+def plot_absolute_score_histogram(thresholds, all_counts, true_counts, xlabel, ax=None):
     plt.figure()
     # First graph
     if ax is None:
         _, ax = plt.subplots()
-    falses = [i - j for i, j in zip(counts, counts2)]
-    width = thresholds[1] - thresholds[0]
-    plt.bar(thresholds, falses , width=width,
+    falses = [i - j for i, j in zip(all_counts, true_counts)]
+    width = (thresholds[1] - thresholds[0])/2
+    offset = [i + width for i in thresholds]
+    plt.bar(offset, falses , width=width,
             log=False, label="False items")
-    plt.bar(thresholds, counts2, width=width,
+    plt.bar(thresholds, true_counts, width=width,
             log=False, color="purple", label="True items")
     plt.grid(False)
     # Write to image
     image_data = StringIO()
     plt.xlim((0.0, 1.0))
     plt.xlabel(xlabel)
-    plt.legend()
+    plt.legend(loc='best')
     plt.savefig(image_data, format='svg')
     image_data.seek(0)
     return image_data

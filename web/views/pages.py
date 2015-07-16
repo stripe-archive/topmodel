@@ -45,7 +45,7 @@ def training(path):
         'precision_recall_curve': plots.precision_recall_curve(cached_data),
         'roc_curve': plots.roc_curve(cached_data),
         'score_distribution': plots.score_distribution(cached_data[0]),
-        'absolute_score_distribution': plots.absolute_score_distribution(cached_data[0])
+        'absolute_score_distribution': plots.absolute_score_distribution(cached_data[0]),
         'marginal_precision_curve': plots.marginal_precision_curve(cached_data[0]),
         'threshold_graph': plots.thresholds_graph(cached_data[0]),
         'threshold_table': plots.thresholds_table(cached_data[0]),
