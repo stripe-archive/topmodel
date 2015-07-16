@@ -14,11 +14,6 @@
   </div>
 
   <div class="col-md-6">
-    <h2> Score distribution </h2>
-    {{score_distribution|safe}}
-  </div>
-
-  <div class="col-md-6">
     <h2> Marginal Precision </h2>
     {{marginal_precision_curve|safe}}
   </div>
@@ -26,6 +21,11 @@
   <div class="col-md-6">
     <h2> Threshold graph </h2>
     {{threshold_graph|safe}}
+  </div>
+
+  <div class="col-md-6">
+    <h2> Score distribution </h2>
+    {{score_distribution|safe}}
   </div>
 
   {% if precision_over_time %}
