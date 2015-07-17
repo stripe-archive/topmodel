@@ -19,7 +19,7 @@ SCORES_BM_FILE = 'scores_bm.tsv'
 
 HISTOGRAM_FILE = 'histogram.json'
 NOTES_FILE = "notes.txt"
-METATDATA_FILE = "metadata.txt"
+METADATA_FILE = "metadata.txt"
 
 BIN_COUNT = 100
 
@@ -185,7 +185,7 @@ class ModelData(object):
             self.file_system.write_file(scores_path, f.getvalue())
 
     def get_metadata(self):
-        metadata_path = os.path.join(self.model_path, METATDATA_FILE)
+        metadata_path = os.path.join(self.model_path, METADATA_FILE)
         return self.file_system.read_file(metadata_path)
 
     def get_notes(self):
