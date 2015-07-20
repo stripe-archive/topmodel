@@ -154,11 +154,13 @@ class ModelData(object):
 
             for i in range(THRESHOLD_BINS):
                 probs.append((bin_edges[i] + bin_edges[i + 1]) / 2)
-                o_count.append(np.count_nonzero(
-                               ((predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1])) & actual))
-                f_count.append(np.count_nonzero(
-                               ((predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1]))))
-            # the probabilities, the number of true, and the total number
+                o_count.append(
+                    np.count_nonzero(
+                        ((predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1])) & actual))
+                f_count.append(
+                    np.count_nonzero(
+                        ((predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1]))))
+
             ret = {'probs': probs, 'trues': o_count, 'totals': f_count}
 
             # Cache the histogram info if this isn't a bootstrap resample:
