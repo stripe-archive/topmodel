@@ -75,17 +75,8 @@ class ModelData(object):
         self.file_system = file_system
         self.data_frame = None
 
-    def get_metrics(self, bootstrap=False):
-        def bootstrap_histogram(hist):
-            def samp(x):
-                return np.random.poisson(x)
-            # i think this is right
-            trues = [samp(x) for x in hist['trues']]
-            falses = map(
-                lambda x: samp(x[0] - x[1]), zip(hist['totals'], hist['trues']))
-            return {'probs': hist['probs'],
-                    'trues': trues,
-                    'totals': map(lambda x: x[0] + x[1], zip(trues, falses))}
+    def get_metrics(self, n_bootstrap_samples=0):
+        hist = self.to_histogram_format(resample=False)
 
         def metrics_from_hist(hist):
             return {
@@ -103,15 +94,12 @@ class ModelData(object):
                 'logloss': hmetrics.logloss(hist)
             }
 
-        hist = self.to_histogram_format()
         base = metrics_from_hist(hist)
-        if bootstrap == False:
-            return base
-        else:
-            bootstrapped = [
-                metrics_from_hist(bootstrap_histogram(hist))
-                for x in range(bootstrap)]
-            return [base] + bootstrapped
+        bootstrapped = []
+        for _ in xrange(n_bootstrap_samples):
+            resampled_hist = self.to_histogram_format(resample=True)
+            bootstrapped.append(metrics_from_hist(resampled_hist))
+        return [base] + bootstrapped
 
     def check_alt_format(self):
         # alternate data format is "score,trues,falses"
@@ -143,15 +131,17 @@ class ModelData(object):
         self.check_alt_format()
         return self.data_frame
 
-    def to_histogram_format(self):
+    def to_histogram_format(self, resample=False):
         # Build histogram of the data quantized to THRESHOLD_BINS bins
         # that's a O(1) size representation
+        # If resample is True, sample the data frame with replacement before making histogram.
         histogram_path = os.path.join(self.model_path, HISTOGRAM_FILE)
         histogram_json = self.file_system.read_file(histogram_path)
-        if histogram_json != None:
-            ret = json.loads(histogram_json)
-        else:
+        if histogram_json is None or resample:
             df = self.to_data_frame()
+            if resample:
+                # resample all rows of data frame with replacement
+                df = df.iloc[np.random.randint(0, len(df), len(df))]
             actual = df.get('actual')
             predicted = df.get('pred_score')
             bin_edges = map(
@@ -171,10 +161,15 @@ class ModelData(object):
             # the probabilities, the number of true, and the total number
             ret = {'probs': probs, 'trues': o_count, 'totals': f_count}
 
-            # cache it
-            self.file_system.write_file(histogram_path, json.dumps(ret))
+            # Cache the histogram info if this isn't a bootstrap resample:
+            if not resample:
+                self.file_system.write_file(histogram_path, json.dumps(ret))
 
-        return ret
+            # Return the histogram bins + corresponding "true" and "total" counts
+            return ret
+
+        else:
+            return json.loads(histogram_json)
 
     def save_data_frame(self, df):
         self.data_frame = df
