@@ -95,11 +95,14 @@ class ModelData(object):
             }
 
         base = metrics_from_hist(hist)
-        bootstrapped = []
-        for _ in xrange(n_bootstrap_samples):
-            resampled_hist = self.to_histogram_format(resample=True)
-            bootstrapped.append(metrics_from_hist(resampled_hist))
-        return [base] + bootstrapped
+        if n_bootstrap_samples == 0:
+            return base
+        else:
+            bootstrapped = []
+            for _ in xrange(n_bootstrap_samples):
+                resampled_hist = self.to_histogram_format(resample=True)
+                bootstrapped.append(metrics_from_hist(resampled_hist))
+            return [base] + bootstrapped
 
     def check_alt_format(self):
         # alternate data format is "score,trues,falses"
