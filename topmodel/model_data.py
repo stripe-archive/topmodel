@@ -11,7 +11,7 @@ import numpy as np
 from topmodel import hmetrics
 
 THRESHOLD_BINS = 100
-N_THRESHOLDS = 1. / THRESHOLD_BINS
+# N_THRESHOLDS = 1. / THRESHOLD_BINS
 
 SCORES_FILE = 'scores.tsv'
 ACTUALS_FILE = 'actuals.tsv'
@@ -20,6 +20,9 @@ SCORES_BM_FILE = 'scores_bm.tsv'
 HISTOGRAM_FILE = 'histogram.json'
 NOTES_FILE = "notes.txt"
 METADATA_FILE = "metadata.txt"
+
+TOP_THRESHOLDS = [0.9, 0.95, 0.99, 0.995, 0.9975, 0.999, 0.9995,
+                  0.9999, 0.99995, 0.999999, 0.9999999, 1]
 
 BIN_COUNT = 100
 
@@ -75,34 +78,38 @@ class ModelData(object):
         self.file_system = file_system
         self.data_frame = None
 
+    def metrics_from_hist(self, hist):
+        return {
+            # facts about the histogram
+            'thresholds': hist['thresholds'],
+            'score_distribution': hist['totals'],
+            'trues': hist['trues'],
+            # 3 main metrics
+            'precisions': hmetrics.precisions(hist),
+            'recalls': hmetrics.recalls(hist),
+            'fprs': hmetrics.fprs(hist),
+            # extra metrics
+            'marginal_precisions': hmetrics.marginal_precisions(hist),
+            # single number metrics
+            'logloss': hmetrics.logloss(hist)
+        }
+
     def get_metrics(self, n_bootstrap_samples=0):
         hist = self.to_histogram_format(resample=False)
+        base = self.metrics_from_hist(hist)
 
-        def metrics_from_hist(hist):
-            return {
-                # facts about the histogram
-                'thresholds': hist['probs'],
-                'score_distribution': hist['totals'],
-                'trues': hist['trues'],
-                # 3 main metrics
-                'precisions': hmetrics.precisions(hist),
-                'recalls': hmetrics.recalls(hist),
-                'fprs': hmetrics.fprs(hist),
-                # extra metrics
-                'marginal_precisions': hmetrics.marginal_precisions(hist),
-                # single number metrics
-                'logloss': hmetrics.logloss(hist)
-            }
-
-        base = metrics_from_hist(hist)
         if n_bootstrap_samples == 0:
             return base
         else:
             bootstrapped = []
             for _ in xrange(n_bootstrap_samples):
                 resampled_hist = self.to_histogram_format(resample=True)
-                bootstrapped.append(metrics_from_hist(resampled_hist))
+                bootstrapped.append(self.metrics_from_hist(resampled_hist))
             return [base] + bootstrapped
+
+    def get_top_metrics(self):
+        hist = self.to_histogram_format(resample=False)
+        return self.metrics_from_hist(hist['high_end_hist'])
 
     def check_alt_format(self):
         # alternate data format is "score,trues,falses"
@@ -140,7 +147,7 @@ class ModelData(object):
         # If resample is True, sample the data frame with replacement before making histogram.
         histogram_path = os.path.join(self.model_path, HISTOGRAM_FILE)
         histogram_json = self.file_system.read_file(histogram_path)
-        if histogram_json is None or resample:
+        if histogram_json is None or resample or 'high_end_hist' not in histogram_json:
             df = self.to_data_frame()
             if resample:
                 # resample all rows of data frame with replacement
@@ -149,22 +156,33 @@ class ModelData(object):
             predicted = df.get('pred_score')
             bin_edges = map(
                 lambda x: x * 1.0 / THRESHOLD_BINS, range(0, THRESHOLD_BINS + 1))
-            o_count = []
-            f_count = []
-
-            # actual count in each of the bins
-            probs = []
+            trues, totals, thresholds = [], [], []
+            top_trues, top_totals, top_bins = [], [], TOP_THRESHOLDS[:]
+            top_bins.insert(0, 0.0)
 
             for i in range(THRESHOLD_BINS):
-                probs.append((bin_edges[i] + bin_edges[i + 1]) / 2)
-                o_count.append(
+                thresholds.append(bin_edges[i + 1])
+                trues.append(
                     np.count_nonzero(
-                        ((predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1])) & actual))
-                f_count.append(
+                        ((predicted >= bin_edges[i]) & (predicted < bin_edges[i + 1])) & actual))
+                totals.append(
                     np.count_nonzero(
-                        ((predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1]))))
+                        ((predicted >= bin_edges[i]) & (predicted < bin_edges[i + 1]))))
 
-            ret = {'probs': probs, 'trues': o_count, 'totals': f_count}
+            top_ts = []
+            for i in range(len(TOP_THRESHOLDS)):
+                top_ts.append(top_bins[i + 1])
+                top_trues.append(
+                    np.count_nonzero(
+                        ((predicted >= top_bins[i]) & (predicted < top_bins[i + 1])) & actual))
+                top_totals.append(
+                    np.count_nonzero(
+                        ((predicted >= top_bins[i]) & (predicted < top_bins[i + 1]))))
+
+            # print top_ts
+            # print top_totals
+            ret = {'thresholds': thresholds, 'trues': trues, 'totals': totals,
+                    'high_end_hist': {'thresholds': top_ts, 'trues': top_trues, 'totals': top_totals}}
 
             # Cache the histogram info if this isn't a bootstrap resample:
             if not resample:

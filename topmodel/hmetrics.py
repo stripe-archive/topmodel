@@ -7,7 +7,7 @@ def recalls(hist):
     ret = []
     trues = sum(hist['trues'])
     all_trues = trues
-    for i in range(len(hist['probs'])):
+    for i in range(len(hist['thresholds'])):
         ret.append(trues * 1.0 / all_trues if all_trues != 0 else None)
         trues -= hist['trues'][i]
     return ret
@@ -15,12 +15,12 @@ def recalls(hist):
 
 def fprs(hist):
     # FP / (FP + TN)
-    # probs is being used as the threshold
+    # thresholds is being used as the threshold
     # ones selected that aren't true / all selected
     ret = []
     falses = sum(hist['totals']) - sum(hist['trues'])
     all_falses = falses
-    for i in range(len(hist['probs'])):
+    for i in range(len(hist['thresholds'])):
         ret.append(falses * 1.0 / all_falses if all_falses != 0 else None)
         falses -= (hist['totals'][i] - hist['trues'][i])
     return ret
@@ -30,7 +30,7 @@ def precisions(hist):
     ret = []
     selected = sum(hist['totals'])
     trues = sum(hist['trues'])
-    for i in range(len(hist['probs'])):
+    for i in range(len(hist['thresholds'])):
         ret.append(trues * 1.0 / selected if selected != 0 else None)
         trues -= hist['trues'][i]
         selected -= hist['totals'][i]
@@ -44,11 +44,11 @@ def marginal_precisions(hist):
 def logloss(hist):
     loss = 0.0
     N = sum(hist['totals'])
-    for i in range(len(hist['probs'])):
+    for i in range(len(hist['thresholds'])):
         t = hist['trues'][i]
         f = hist['totals'][i] - t
         loss += t * \
-            np.log(hist['probs'][i]) + f * np.log(1.0 - hist['probs'][i])
+            np.log(hist['thresholds'][i]) + f * np.log(1.0 - hist['thresholds'][i])
     return -loss / N
 
 
