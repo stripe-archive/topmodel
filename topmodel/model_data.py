@@ -107,21 +107,17 @@ class ModelData(object):
     def check_alt_format(self):
         # alternate data format is "score,trues,falses"
         # here we build the DataFrame to match the old scores.tsv
-        # sadly this is slow...
+        # weights are not supported in the alternate format.
 
-        # TODO: needlessly slow
-        raw = self.data_frame
-        if 'trues' in raw.columns:
-            actual = []
-            pred_score = []
-            # not very pythonic...
-            for i in range(len(raw)):
-                tr = raw.irow(i)
-                pred_score += [tr.score] * int(tr.trues + tr.falses)
-                actual += [False] * int(tr.falses)
-                actual += [True] * int(tr.trues)
-            self.data_frame = pd.DataFrame(
-                data={'actual': actual, 'pred_score': pred_score})
+        orig_df = self.data_frame
+        if 'trues' in orig_df.columns:
+            true_df = pd.DataFrame(
+                data={'actual': np.repeat(True, sum(orig_df['trues'])),
+                      'pred_score': np.repeat(orig_df['score'].values, orig_df['trues'])})
+            false_df = pd.DataFrame(
+                data={'actual': np.repeat(False, sum(orig_df['falses'])),
+                      'pred_score': np.repeat(orig_df['score'].values, orig_df['falses'])})
+            self.data_frame = pd.concat([true_df, false_df])
 
     def to_data_frame(self, **kwargs):
         if self.data_frame is None:
