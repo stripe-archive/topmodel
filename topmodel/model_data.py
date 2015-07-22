@@ -112,11 +112,13 @@ class ModelData(object):
         orig_df = self.data_frame
         if 'trues' in orig_df.columns:
             true_df = pd.DataFrame(
-                data={'actual': np.repeat(True, sum(orig_df['trues'])),
-                      'pred_score': np.repeat(orig_df['score'].values, orig_df['trues'])})
+                data={'actual': np.repeat(True, len(orig_df)),
+                      'weight': orig_df['trues'],
+                      'pred_score': orig_df['score']})
             false_df = pd.DataFrame(
-                data={'actual': np.repeat(False, sum(orig_df['falses'])),
-                      'pred_score': np.repeat(orig_df['score'].values, orig_df['falses'])})
+                data={'actual': np.repeat(False, len(orig_df)),
+                      'weight': orig_df['falses'],
+                      'pred_score': orig_df['score']})
             self.data_frame = pd.concat([true_df, false_df])
 
     def to_data_frame(self, **kwargs):
@@ -143,7 +145,7 @@ class ModelData(object):
                 df = df.iloc[np.random.randint(0, len(df), len(df))]
             actual = df.get('actual')
             predicted = df.get('pred_score')
-            if not df.get('weight'):
+            if df.get('weight') is None:
                 weight = np.ones(len(df))
             else:
                 weight = df['weight']
