@@ -147,24 +147,25 @@ class ModelData(object):
                 df = df.iloc[np.random.randint(0, len(df), len(df))]
             actual = df.get('actual')
             predicted = df.get('pred_score')
+            if not df.get('weight'):
+                weight = np.ones(len(df))
+            else:
+                weight = df['weight']
             bin_edges = map(
                 lambda x: x * 1.0 / THRESHOLD_BINS, range(0, THRESHOLD_BINS + 1))
-            o_count = []
-            f_count = []
+            true_count = []
+            total_count = []
 
             # actual count in each of the bins
             probs = []
-
             for i in range(THRESHOLD_BINS):
                 probs.append((bin_edges[i] + bin_edges[i + 1]) / 2)
-                o_count.append(
-                    np.count_nonzero(
-                        ((predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1])) & actual))
-                f_count.append(
-                    np.count_nonzero(
-                        ((predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1]))))
+                obs_in_bin = (predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1])
+                true_obs_in_bin = obs_in_bin & actual
+                true_count.append(np.sum(weight * true_obs_in_bin))
+                total_count.append(np.sum(weight * obs_in_bin))
 
-            ret = {'probs': probs, 'trues': o_count, 'totals': f_count}
+            ret = {'probs': probs, 'trues': true_count, 'totals': total_count}
 
             # Cache the histogram info if this isn't a bootstrap resample:
             if not resample:
