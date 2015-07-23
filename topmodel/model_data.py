@@ -107,21 +107,19 @@ class ModelData(object):
     def check_alt_format(self):
         # alternate data format is "score,trues,falses"
         # here we build the DataFrame to match the old scores.tsv
-        # sadly this is slow...
+        # weights are not supported in the alternate format.
 
-        # TODO: needlessly slow
-        raw = self.data_frame
-        if 'trues' in raw.columns:
-            actual = []
-            pred_score = []
-            # not very pythonic...
-            for i in range(len(raw)):
-                tr = raw.irow(i)
-                pred_score += [tr.score] * int(tr.trues + tr.falses)
-                actual += [False] * int(tr.falses)
-                actual += [True] * int(tr.trues)
-            self.data_frame = pd.DataFrame(
-                data={'actual': actual, 'pred_score': pred_score})
+        orig_df = self.data_frame
+        if 'trues' in orig_df.columns:
+            true_df = pd.DataFrame(
+                data={'actual': np.repeat(True, len(orig_df)),
+                      'weight': orig_df['trues'],
+                      'pred_score': orig_df['score']})
+            false_df = pd.DataFrame(
+                data={'actual': np.repeat(False, len(orig_df)),
+                      'weight': orig_df['falses'],
+                      'pred_score': orig_df['score']})
+            self.data_frame = pd.concat([true_df, false_df])
 
     def to_data_frame(self, **kwargs):
         if self.data_frame is None:
@@ -147,24 +145,25 @@ class ModelData(object):
                 df = df.iloc[np.random.randint(0, len(df), len(df))]
             actual = df.get('actual')
             predicted = df.get('pred_score')
+            if df.get('weight') is None:
+                weight = np.ones(len(df))
+            else:
+                weight = df['weight']
             bin_edges = map(
                 lambda x: x * 1.0 / THRESHOLD_BINS, range(0, THRESHOLD_BINS + 1))
-            o_count = []
-            f_count = []
+            true_count = []
+            total_count = []
 
             # actual count in each of the bins
             probs = []
-
             for i in range(THRESHOLD_BINS):
                 probs.append((bin_edges[i] + bin_edges[i + 1]) / 2)
-                o_count.append(
-                    np.count_nonzero(
-                        ((predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1])) & actual))
-                f_count.append(
-                    np.count_nonzero(
-                        ((predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1]))))
+                obs_in_bin = (predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1])
+                true_obs_in_bin = obs_in_bin & actual
+                true_count.append(np.sum(weight * true_obs_in_bin))
+                total_count.append(np.sum(weight * obs_in_bin))
 
-            ret = {'probs': probs, 'trues': o_count, 'totals': f_count}
+            ret = {'probs': probs, 'trues': true_count, 'totals': total_count}
 
             # Cache the histogram info if this isn't a bootstrap resample:
             if not resample:
