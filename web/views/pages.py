@@ -40,6 +40,7 @@ def compare():
 def training(path):
     model_data = g.model_data_manager.models[path]
     cached_data = model_data.get_metrics(50)
+    top_data = model_data.get_top_metrics()
 
     context = {
         'precision_recall_curve': plots.precision_recall_curve(cached_data),
@@ -49,6 +50,7 @@ def training(path):
         'marginal_precision_curve': plots.marginal_precision_curve(cached_data[0]),
         'threshold_graph': plots.thresholds_graph(cached_data[0]),
         'threshold_table': plots.thresholds_table(cached_data[0]),
+        'top_threshold_table': plots.thresholds_table(top_data),
 
         'auc': auc(cached_data[0]['fprs'], cached_data[0]['recalls']),
         'notes': model_data.get_notes(),

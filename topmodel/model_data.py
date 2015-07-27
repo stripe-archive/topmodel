@@ -11,7 +11,6 @@ import numpy as np
 from topmodel import hmetrics
 
 THRESHOLD_BINS = 100
-N_THRESHOLDS = 1. / THRESHOLD_BINS
 
 SCORES_FILE = 'scores.tsv'
 ACTUALS_FILE = 'actuals.tsv'
@@ -20,6 +19,9 @@ SCORES_BM_FILE = 'scores_bm.tsv'
 HISTOGRAM_FILE = 'histogram.json'
 NOTES_FILE = "notes.txt"
 METADATA_FILE = "metadata.txt"
+
+TOP_THRESHOLDS = [0.9, 0.95, 0.99, 0.995, 0.9975, 0.999, 0.9995,
+                  0.9999, 0.99995, 0.999999, 0.9999999, 1]
 
 BIN_COUNT = 100
 
@@ -75,34 +77,38 @@ class ModelData(object):
         self.file_system = file_system
         self.data_frame = None
 
+    def metrics_from_hist(self, hist):
+        return {
+            # facts about the histogram
+            'thresholds': hist['thresholds'],
+            'score_distribution': hist['totals'],
+            'trues': hist['trues'],
+            # 3 main metrics
+            'precisions': hmetrics.precisions(hist),
+            'recalls': hmetrics.recalls(hist),
+            'fprs': hmetrics.fprs(hist),
+            # extra metrics
+            'marginal_precisions': hmetrics.marginal_precisions(hist),
+            # single number metrics
+            'logloss': hmetrics.logloss(hist)
+        }
+
     def get_metrics(self, n_bootstrap_samples=0):
         hist = self.to_histogram_format(resample=False)
+        base = self.metrics_from_hist(hist)
 
-        def metrics_from_hist(hist):
-            return {
-                # facts about the histogram
-                'thresholds': hist['probs'],
-                'score_distribution': hist['totals'],
-                'trues': hist['trues'],
-                # 3 main metrics
-                'precisions': hmetrics.precisions(hist),
-                'recalls': hmetrics.recalls(hist),
-                'fprs': hmetrics.fprs(hist),
-                # extra metrics
-                'marginal_precisions': hmetrics.marginal_precisions(hist),
-                # single number metrics
-                'logloss': hmetrics.logloss(hist)
-            }
-
-        base = metrics_from_hist(hist)
         if n_bootstrap_samples == 0:
             return base
         else:
             bootstrapped = []
             for _ in xrange(n_bootstrap_samples):
                 resampled_hist = self.to_histogram_format(resample=True)
-                bootstrapped.append(metrics_from_hist(resampled_hist))
+                bootstrapped.append(self.metrics_from_hist(resampled_hist))
             return [base] + bootstrapped
+
+    def get_top_metrics(self):
+        hist = self.to_histogram_format(resample=False)
+        return self.metrics_from_hist(hist['high_end_hist'])
 
     def check_alt_format(self):
         # alternate data format is "score,trues,falses"
@@ -132,13 +138,26 @@ class ModelData(object):
         self.check_alt_format()
         return self.data_frame
 
+    def get_thresholds_trues_totals(self, range_info, bin_list, predicted, actual, weight):
+        trues, totals, thresholds = [], [], []
+        for i in range(range_info):
+            thresholds.append(bin_list[i + 1])
+            obs_in_bin = (predicted >= bin_list[i]) & (predicted < bin_list[i + 1])
+            true_obs_in_bin = obs_in_bin & actual
+            trues.append(np.sum(weight * true_obs_in_bin))
+            totals.append(np.sum(weight * obs_in_bin))
+
+        return {'thresholds': thresholds, 'trues': trues, 'totals': totals}
+
     def to_histogram_format(self, resample=False):
         # Build histogram of the data quantized to THRESHOLD_BINS bins
         # that's a O(1) size representation
         # If resample is True, sample the data frame with replacement before making histogram.
         histogram_path = os.path.join(self.model_path, HISTOGRAM_FILE)
         histogram_json = self.file_system.read_file(histogram_path)
-        if histogram_json is None or resample:
+        # This will force a recalculation of the histogram using the new key names
+        # and ensure that each page will have a top thresholds view.
+        if histogram_json is None or resample or 'high_end_hist' not in histogram_json:
             df = self.to_data_frame()
             if resample:
                 # resample all rows of data frame with replacement
@@ -151,22 +170,17 @@ class ModelData(object):
                 weight = df['weight']
             bin_edges = map(
                 lambda x: x * 1.0 / THRESHOLD_BINS, range(0, THRESHOLD_BINS + 1))
-            true_count = []
-            total_count = []
 
-            # actual count in each of the bins
-            probs = []
-            for i in range(THRESHOLD_BINS):
-                probs.append((bin_edges[i] + bin_edges[i + 1]) / 2)
-                obs_in_bin = (predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1])
-                true_obs_in_bin = obs_in_bin & actual
-                true_count.append(np.sum(weight * true_obs_in_bin))
-                total_count.append(np.sum(weight * obs_in_bin))
+            top_bins = TOP_THRESHOLDS[:]
+            top_bins.insert(0, 0.0)
 
-            ret = {'probs': probs, 'trues': true_count, 'totals': total_count}
+            ret = self.get_thresholds_trues_totals(THRESHOLD_BINS, bin_edges, predicted, actual, weight)
 
-            # Cache the histogram info if this isn't a bootstrap resample:
+            # If it's not a resample, calculate the top thresholds and cache the histogram.
             if not resample:
+                high_end = self.get_thresholds_trues_totals(len(TOP_THRESHOLDS), top_bins, predicted, actual, weight)
+                ret['high_end_hist'] = high_end
+
                 self.file_system.write_file(histogram_path, json.dumps(ret))
 
             # Return the histogram bins + corresponding "true" and "total" counts
@@ -206,7 +220,7 @@ class BenchmarkedModelData(ModelData):
     def indexed_data_frame(self, path, **kwargs):
         raw = self.file_system.read_file(path)
         with io.BytesIO(raw) as f:
-          df = pd.read_csv(f, sep='\t', index_col=False, **kwargs)
+            df = pd.read_csv(f, sep='\t', index_col=False, **kwargs)
         assert df.duplicated('id').sum() == 0, "id column is not unique"
         return df.set_index('id')
 

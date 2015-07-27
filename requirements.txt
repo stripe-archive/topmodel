@@ -7,4 +7,4 @@ pandas>=0.13.1
 pyyaml>=3.10
 scikit_learn>=0.14.1
 scipy>=0.13.3
-mpld3
+mpld3>=0.2
