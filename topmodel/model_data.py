@@ -138,6 +138,17 @@ class ModelData(object):
         self.check_alt_format()
         return self.data_frame
 
+    def get_thresholds_trues_totals(self, range_info, bin_list, predicted, actual, weight):
+        trues, totals, thresholds = [], [], []
+        for i in range(range_info):
+            thresholds.append(bin_list[i + 1])
+            obs_in_bin = (predicted >= bin_list[i]) & (predicted < bin_list[i + 1])
+            true_obs_in_bin = obs_in_bin & actual
+            trues.append(np.sum(weight * true_obs_in_bin))
+            totals.append(np.sum(weight * obs_in_bin))
+
+        return {'thresholds': thresholds, 'trues': trues, 'totals': totals}
+
     def to_histogram_format(self, resample=False):
         # Build histogram of the data quantized to THRESHOLD_BINS bins
         # that's a O(1) size representation
@@ -160,30 +171,15 @@ class ModelData(object):
             bin_edges = map(
                 lambda x: x * 1.0 / THRESHOLD_BINS, range(0, THRESHOLD_BINS + 1))
 
-            trues, totals, thresholds = [], [], []
-            top_trues, top_totals, top_bins = [], [], TOP_THRESHOLDS[:]
+            top_bins = TOP_THRESHOLDS[:]
             top_bins.insert(0, 0.0)
 
-            for i in range(THRESHOLD_BINS):
-                thresholds.append(bin_edges[i + 1])
-                obs_in_bin = (predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1])
-                true_obs_in_bin = obs_in_bin & actual
-                trues.append(np.sum(weight * true_obs_in_bin))
-                totals.append(np.sum(weight * obs_in_bin))
-
-                ret = {'thresholds': thresholds, 'trues': trues, 'totals': totals}
+            ret = self.get_thresholds_trues_totals(THRESHOLD_BINS, bin_edges, predicted, actual, weight)
 
             # If it's not a resample, calculate the top thresholds and cache the histogram.
             if not resample:
-                top_ts = []
-                for i in range(len(TOP_THRESHOLDS)):
-                    top_ts.append(top_bins[i + 1])
-                    obs_in_bin = (predicted >= top_bins[i]) & (predicted <= top_bins[i + 1])
-                    true_obs_in_bin = obs_in_bin & actual
-                    top_trues.append(np.sum(weight * true_obs_in_bin))
-                    top_totals.append(np.sum(weight * obs_in_bin))
-
-                ret['high_end_hist'] = {'thresholds': top_ts, 'trues': top_trues, 'totals': top_totals}
+                high_end = self.get_thresholds_trues_totals(len(TOP_THRESHOLDS), top_bins, predicted, actual, weight)
+                ret['high_end_hist'] = high_end
 
                 self.file_system.write_file(histogram_path, json.dumps(ret))
 
