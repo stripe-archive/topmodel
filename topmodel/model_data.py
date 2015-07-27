@@ -114,21 +114,19 @@ class ModelData(object):
     def check_alt_format(self):
         # alternate data format is "score,trues,falses"
         # here we build the DataFrame to match the old scores.tsv
-        # sadly this is slow...
+        # weights are not supported in the alternate format.
 
-        # TODO: needlessly slow
-        raw = self.data_frame
-        if 'trues' in raw.columns:
-            actual = []
-            pred_score = []
-            # not very pythonic...
-            for i in range(len(raw)):
-                tr = raw.irow(i)
-                pred_score += [tr.score] * int(tr.trues + tr.falses)
-                actual += [False] * int(tr.falses)
-                actual += [True] * int(tr.trues)
-            self.data_frame = pd.DataFrame(
-                data={'actual': actual, 'pred_score': pred_score})
+        orig_df = self.data_frame
+        if 'trues' in orig_df.columns:
+            true_df = pd.DataFrame(
+                data={'actual': np.repeat(True, len(orig_df)),
+                      'weight': orig_df['trues'],
+                      'pred_score': orig_df['score']})
+            false_df = pd.DataFrame(
+                data={'actual': np.repeat(False, len(orig_df)),
+                      'weight': orig_df['falses'],
+                      'pred_score': orig_df['score']})
+            self.data_frame = pd.concat([true_df, false_df])
 
     def to_data_frame(self, **kwargs):
         if self.data_frame is None:
@@ -147,6 +145,8 @@ class ModelData(object):
         # If resample is True, sample the data frame with replacement before making histogram.
         histogram_path = os.path.join(self.model_path, HISTOGRAM_FILE)
         histogram_json = self.file_system.read_file(histogram_path)
+        # This will force a recalculation of the histogram using the new key names
+        # and ensure that each page will have a top thresholds view.
         if histogram_json is None or resample or 'high_end_hist' not in histogram_json:
             df = self.to_data_frame()
             if resample:
@@ -154,38 +154,38 @@ class ModelData(object):
                 df = df.iloc[np.random.randint(0, len(df), len(df))]
             actual = df.get('actual')
             predicted = df.get('pred_score')
+            if df.get('weight') is None:
+                weight = np.ones(len(df))
+            else:
+                weight = df['weight']
             bin_edges = map(
                 lambda x: x * 1.0 / THRESHOLD_BINS, range(0, THRESHOLD_BINS + 1))
+
             trues, totals, thresholds = [], [], []
             top_trues, top_totals, top_bins = [], [], TOP_THRESHOLDS[:]
             top_bins.insert(0, 0.0)
 
             for i in range(THRESHOLD_BINS):
                 thresholds.append(bin_edges[i + 1])
-                trues.append(
-                    np.count_nonzero(
-                        ((predicted >= bin_edges[i]) & (predicted < bin_edges[i + 1])) & actual))
-                totals.append(
-                    np.count_nonzero(
-                        ((predicted >= bin_edges[i]) & (predicted < bin_edges[i + 1]))))
+                obs_in_bin = (predicted >= bin_edges[i]) & (predicted <= bin_edges[i + 1])
+                true_obs_in_bin = obs_in_bin & actual
+                trues.append(np.sum(weight * true_obs_in_bin))
+                totals.append(np.sum(weight * obs_in_bin))
 
-            top_ts = []
-            for i in range(len(TOP_THRESHOLDS)):
-                top_ts.append(top_bins[i + 1])
-                top_trues.append(
-                    np.count_nonzero(
-                        ((predicted >= top_bins[i]) & (predicted < top_bins[i + 1])) & actual))
-                top_totals.append(
-                    np.count_nonzero(
-                        ((predicted >= top_bins[i]) & (predicted < top_bins[i + 1]))))
+                ret = {'thresholds': thresholds, 'trues': trues, 'totals': totals}
 
-            # print top_ts
-            # print top_totals
-            ret = {'thresholds': thresholds, 'trues': trues, 'totals': totals,
-                    'high_end_hist': {'thresholds': top_ts, 'trues': top_trues, 'totals': top_totals}}
-
-            # Cache the histogram info if this isn't a bootstrap resample:
+            # If it's not a resample, calculate the top thresholds and cache the histogram.
             if not resample:
+                top_ts = []
+                for i in range(len(TOP_THRESHOLDS)):
+                    top_ts.append(top_bins[i + 1])
+                    obs_in_bin = (predicted >= top_bins[i]) & (predicted <= top_bins[i + 1])
+                    true_obs_in_bin = obs_in_bin & actual
+                    top_trues.append(np.sum(weight * true_obs_in_bin))
+                    top_totals.append(np.sum(weight * obs_in_bin))
+
+                ret['high_end_hist'] = {'thresholds': top_ts, 'trues': top_trues, 'totals': top_totals}
+
                 self.file_system.write_file(histogram_path, json.dumps(ret))
 
             # Return the histogram bins + corresponding "true" and "total" counts
@@ -225,7 +225,7 @@ class BenchmarkedModelData(ModelData):
     def indexed_data_frame(self, path, **kwargs):
         raw = self.file_system.read_file(path)
         with io.BytesIO(raw) as f:
-          df = pd.read_csv(f, sep='\t', index_col=False, **kwargs)
+            df = pd.read_csv(f, sep='\t', index_col=False, **kwargs)
         assert df.duplicated('id').sum() == 0, "id column is not unique"
         return df.set_index('id')
 
