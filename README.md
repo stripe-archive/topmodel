@@ -86,7 +86,7 @@ Then start topmodel with
    * For example:
 
     ```
-    actual	pred-score
+    actual	pred_score
     False	0.2
     True	0.8
     True	0.7
