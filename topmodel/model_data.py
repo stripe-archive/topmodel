@@ -11,7 +11,6 @@ import numpy as np
 from topmodel import hmetrics
 
 THRESHOLD_BINS = 100
-# N_THRESHOLDS = 1. / THRESHOLD_BINS
 
 SCORES_FILE = 'scores.tsv'
 ACTUALS_FILE = 'actuals.tsv'
