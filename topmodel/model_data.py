@@ -117,7 +117,7 @@ class ModelData(object):
             self.file_system.write_file(bootstrap_path, json.dumps(bootstrap))
 
         else:
-            bootstrap = json.loads(bootstrap_path)
+            bootstrap = json.loads(bootstrap_json)
 
         return bootstrap
 
