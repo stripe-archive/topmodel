@@ -17,6 +17,7 @@ ACTUALS_FILE = 'actuals.tsv'
 SCORES_BM_FILE = 'scores_bm.tsv'
 
 HISTOGRAM_FILE = 'histogram.json'
+BOOTSTRAP_FILE = 'bootstrap.json'
 NOTES_FILE = "notes.txt"
 METADATA_FILE = "metadata.txt"
 
@@ -100,11 +101,25 @@ class ModelData(object):
         if n_bootstrap_samples == 0:
             return base
         else:
-            bootstrapped = []
+            bootstrapped = self.to_bootstrap_format(n_bootstrap_samples)
+            return [base] + bootstrapped
+
+    def to_bootstrap_format(self, n_bootstrap_samples):
+        bootstrap_path = os.path.join(self.model_path, BOOTSTRAP_FILE)
+        bootstrap_json = self.file_system.read_file(bootstrap_path)
+
+        if bootstrap_json is None or len(json.loads(bootstrap_json)) != n_bootstrap_samples:
+            bootstrap = []
             for _ in xrange(n_bootstrap_samples):
                 resampled_hist = self.to_histogram_format(resample=True)
-                bootstrapped.append(self.metrics_from_hist(resampled_hist))
-            return [base] + bootstrapped
+                bootstrap.append(self.metrics_from_hist(resampled_hist))
+
+            self.file_system.write_file(bootstrap_path, json.dumps(bootstrap))
+
+        else:
+            bootstrap = json.loads(bootstrap_json)
+
+        return bootstrap
 
     def get_top_metrics(self):
         hist = self.to_histogram_format(resample=False)
