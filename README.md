@@ -36,10 +36,15 @@ to the actual rate -- the closer it is to a straight line, the better.
 
 #### Score distribution
 
-Plots the distribution of scores for all instances and only for instances
-labelled 'True'.
+There are two graphs that show score distributions for instances
+labelled 'True' and instances labelled 'False'. The first graph shows the
+log distribution of the scores:
 
-![Score frequencies](http://i.imgur.com/P77AQ5C.png)
+![Log score frequencies](logscores.png)
+
+And the second shows the absolute frequencies:
+
+![Absolute score frequencies](absolutescores.png)
 
 ## Using topmodel locally
 
@@ -82,6 +87,7 @@ Then start topmodel with
 1. Create a TSV with columns 'pred_score' and 'actual'. Save it to `your_model_name.tsv`. The columns should be separated by tabs. In each row:
    * `actual` should be 0 or 1 (True/False also work)
    * `pred_score` should be the score the model determined.
+   * `weight` is an optional third column if you want to weight different instances more or less (default is 1).
    * See the examples in `example_data/`
    * For example:
 
