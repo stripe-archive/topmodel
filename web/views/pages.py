@@ -21,13 +21,13 @@ def compare():
         model_data = g.model_data_manager.models[path]
         cached_datas.append(model_data.get_metrics(10))
 
-    _, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(12, 6))
     for name, cached_data in zip(models, cached_datas):
-        prc = plots.precision_recall_curve(cached_data, ax=ax, label=name)
+        prc = plots.precision_recall_curve(cached_data, ax=ax, fig=fig, label=name)
 
-    _, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(12, 6))
     for name, cached_data in zip(models, cached_datas):
-        roc = plots.roc_curve(cached_data, ax=ax, label=name)
+        roc = plots.roc_curve(cached_data, ax=ax, fig=fig, label=name)
 
     context = {
         'precision_recall_curve': prc,

@@ -88,9 +88,11 @@ def pretty_point(coord):
     return "0.0" if (coord is None) else ("%.2f" % coord)
 
 
-def plot_xy_bootstrapped(xs, ys, thresholds, xlabel, ylabel, labels=False, labels_left=False, ax=None, label=None, **plot_kwargs):
+def plot_xy_bootstrapped(xs, ys, thresholds, xlabel, ylabel, labels=False, labels_left=False, ax=None, fig=None, label=None, **plot_kwargs):
     if ax is None:
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
+    if fig is None:
+        fig, _ = plt.subplots()
     for i in range(1, len(xs)):
         ax.plot(xs[i], ys[i], '-', alpha=0.3)
     (xs_, ys_, thresholds_) = make_points_far(xs[0], ys[0], thresholds)

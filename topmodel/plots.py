@@ -26,23 +26,23 @@ def utf8_decode(image_data):
     return image_data.read().decode('utf-8')
 
 
-def precision_recall_curve(cached_data, ax=None, label=None):
+def precision_recall_curve(cached_data, ax=None, fig=None, label=None):
     thresholds = cached_data[0]['thresholds']
     precision = [x['precisions'] for x in cached_data]
     recall = [x['recalls'] for x in cached_data]
 
     image_data = plot_helpers.plot_xy_bootstrapped(
-        precision, recall, thresholds, 'precision', 'recall', ax=ax, label=label)
+        precision, recall, thresholds, 'precision', 'recall', fig=fig, ax=ax, label=label)
     return utf8_decode(image_data)
 
 
-def roc_curve(cached_data, ax=None, label=None):
+def roc_curve(cached_data, ax=None, fig=None, label=None):
     thresholds = cached_data[0]['thresholds']
     fpr = [x['fprs'] for x in cached_data]
     tpr = [x['recalls'] for x in cached_data]
 
     image_data = plot_helpers.plot_xy_bootstrapped(
-        fpr, tpr, thresholds, 'false positive', 'true positive', ax=ax, label=label)
+        fpr, tpr, thresholds, 'false positive', 'true positive', fig=fig, ax=ax, label=label)
     return utf8_decode(image_data)
 
 
