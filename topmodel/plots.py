@@ -1,10 +1,5 @@
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
-
-import matplotlib
-import matplotlib.pyplot as plt
 
 from topmodel import plot_helpers
 
@@ -32,7 +27,7 @@ def precision_recall_curve(cached_data, ax=None, fig=None, label=None):
     recall = [x['recalls'] for x in cached_data]
 
     image_data = plot_helpers.plot_xy_bootstrapped(
-        precision, recall, thresholds, 'precision', 'recall', fig=fig, ax=ax, label=label)
+        recall, precision, thresholds, 'recall', 'precision', fig=fig, ax=ax, label=label)
     return utf8_decode(image_data)
 
 
@@ -62,7 +57,8 @@ def thresholds_graph(cached_data):
 def thresholds_table(cached_data):
     table = _metrics_table(cached_data)
     html = table.to_html()
-    return html.replace('class="dataframe"', 'class="table table-striped table-bordered table-condensed"')
+    return html.replace('class="dataframe"',
+                        'class="table table-striped table-bordered table-condensed"')
 
 
 def score_distribution(cached_data):
@@ -71,6 +67,7 @@ def score_distribution(cached_data):
         cached_data['trues'],
         'Score')
     return utf8_decode(image_data)
+
 
 def absolute_score_distribution(cached_data):
     image_data = plot_helpers.plot_absolute_score_histogram(
