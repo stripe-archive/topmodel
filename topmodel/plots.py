@@ -1,10 +1,5 @@
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
-
-import matplotlib
-import matplotlib.pyplot as plt
 
 from topmodel import plot_helpers
 
@@ -62,19 +57,21 @@ def thresholds_graph(cached_data):
 def thresholds_table(cached_data):
     table = _metrics_table(cached_data)
     html = table.to_html()
-    return html.replace('class="dataframe"', 'class="table table-striped table-bordered table-condensed"')
+    return html.replace('class="dataframe"',
+                        'class="table table-striped table-bordered table-condensed"')
 
 
 def score_distribution(cached_data):
     image_data = plot_helpers.plot_scores_histogram_log(
         cached_data['thresholds'], cached_data['score_distribution'],
-        cached_data['trues'],
-        'Score')
+        'Score',
+        true_counts=cached_data['trues'])
     return utf8_decode(image_data)
+
 
 def absolute_score_distribution(cached_data):
     image_data = plot_helpers.plot_absolute_score_histogram(
         cached_data['thresholds'], cached_data['score_distribution'],
-        cached_data['trues'],
-        'Score')
+        'Score',
+        true_counts=cached_data['trues'])
     return utf8_decode(image_data)
