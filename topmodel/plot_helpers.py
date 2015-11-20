@@ -88,7 +88,8 @@ def pretty_point(coord):
     return "0.0" if (coord is None) else ("%.2f" % coord)
 
 
-def plot_xy_bootstrapped(xs, ys, thresholds, xlabel, ylabel, labels=False, labels_left=False, ax=None, fig=None, label=None, **plot_kwargs):
+def plot_xy_bootstrapped(xs, ys, thresholds, xlabel, ylabel, labels=False, labels_left=False,
+                         ax=None, fig=None, label=None, **plot_kwargs):
     if ax is None or fig is None:
         fig1, ax1 = plt.subplots()
     if fig is None:
@@ -98,7 +99,8 @@ def plot_xy_bootstrapped(xs, ys, thresholds, xlabel, ylabel, labels=False, label
     for i in range(1, len(xs)):
         ax.plot(xs[i], ys[i], '-', alpha=0.3)
     (xs_, ys_, thresholds_) = make_points_far(xs[0], ys[0], thresholds)
-    label_text = ["Threshold: %s (%s, %s)" % (t, pretty_point(x), pretty_point(y)) for (x, y, t) in zip(xs_, ys_, thresholds_)]
+    label_text = ["Threshold: %s (%s, %s)" % (t, pretty_point(x), pretty_point(y))
+                  for (x, y, t) in zip(xs_, ys_, thresholds_)]
     if label is None:
         scatter = ax.plot(xs_, ys_, '-o', **plot_kwargs)
         plugins.connect(fig, plugins.PointHTMLTooltip(scatter[0], label_text))
@@ -118,18 +120,22 @@ def plot_xy_bootstrapped(xs, ys, thresholds, xlabel, ylabel, labels=False, label
     return save_image()
 
 
-def plot_scores_histogram_log(thresholds, all_counts, true_counts, xlabel, ax=None):
+def plot_scores_histogram_log(thresholds, all_counts, xlabel, true_counts=None, ax=None):
     plt.figure()
     # First graph
     if ax is None:
         _, ax = plt.subplots()
-    falses = [i - j for i, j in zip(all_counts, true_counts)]
-    width = (thresholds[1] - thresholds[0])/2
+    width = (thresholds[1] - thresholds[0]) / 2
     offset = [i + width for i in thresholds]
-    plt.bar(offset, falses, width=width,
-            log=True, label="False items")
-    plt.bar(thresholds, true_counts, width=width,
-            log=True, color="purple", label="True items")
+    if true_counts is not None:
+        falses = [i - j for i, j in zip(all_counts, true_counts)]
+        plt.bar(offset, falses, width=width,
+                log=True, label="False items")
+        plt.bar(thresholds, true_counts, width=width,
+                log=True, color="purple", label="True items")
+    else:
+        plt.bar(thresholds, all_counts, width=width,
+                log=True, color="purple", label="All items")
     plt.grid(False)
     ax.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
     ax.yaxis.get_major_formatter().set_scientific(False)
@@ -143,18 +149,22 @@ def plot_scores_histogram_log(thresholds, all_counts, true_counts, xlabel, ax=No
     return image_data
 
 
-def plot_absolute_score_histogram(thresholds, all_counts, true_counts, xlabel, ax=None):
+def plot_absolute_score_histogram(thresholds, all_counts, xlabel, true_counts=None, ax=None):
     plt.figure()
     # First graph
     if ax is None:
         _, ax = plt.subplots()
-    falses = [i - j for i, j in zip(all_counts, true_counts)]
-    width = (thresholds[1] - thresholds[0])/2
+    width = (thresholds[1] - thresholds[0]) / 2
     offset = [i + width for i in thresholds]
-    plt.bar(offset, falses , width=width,
-            log=False, label="False items")
-    plt.bar(thresholds, true_counts, width=width,
-            log=False, color="purple", label="True items")
+    if true_counts is not None:
+        falses = [i - j for i, j in zip(all_counts, true_counts)]
+        plt.bar(offset, falses , width=width,
+                log=False, label="False items")
+        plt.bar(thresholds, true_counts, width=width,
+                log=False, color="purple", label="True items")
+    else:
+        plt.bar(thresholds, all_counts, width=width,
+                log=False, color="purple", label="All items")
     plt.grid(False)
     # Write to image
     image_data = StringIO()
