@@ -30,36 +30,44 @@ class FileSystem(object):
 
 class S3FileSystem(FileSystem):
 
-    def __init__(self, bucket_name, aws_access_key_id, aws_secret_access_key, security_token=None):
+    def __init__(self,
+                 bucket_name,
+                 aws_access_key_id,
+                 aws_secret_access_key,
+                 security_token=None,
+                 subdirectory=''):
         conn = S3Connection(
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
             security_token=security_token)
         self.bucket = conn.get_bucket(bucket_name)
+        self.subdirectory = subdirectory
+        if subdirectory and not subdirectory.endswith('/'):
+            self.subdirectory += '/'
 
     def read_file(self, path):
-        key = self.bucket.get_key(path)
+        key = self.bucket.get_key(self.subdirectory + path)
         if key is None:
             return None
         return key.read()
 
     def write_file(self, path, data):
-        key = self.bucket.get_key(path)
+        key = self.bucket.get_key(self.subdirectory + path)
         if key is None:
-            key = self.bucket.new_key(path)
+            key = self.bucket.new_key(self.subdirectory + path)
         key.set_contents_from_string(data)
 
     def list(self, path=''):
-        return [key.name for key in self.bucket.list(path)]
+        return [key.name for key in self.bucket.list(self.subdirectory + path)]
 
     def list_name_modified(self, path=''):
         model_names_and_modified = {}
-        for key in self.bucket.list(path):
+        for key in self.bucket.list(self.subdirectory + path):
             model_names_and_modified[key.name] = key.last_modified
         return model_names_and_modified
 
     def remove(self, path):
-        keys = self.bucket.get_all_keys(prefix=path)
+        keys = self.bucket.get_all_keys(prefix=self.subdirectory + path)
         self.bucket.delete_keys(keys)
 
 
