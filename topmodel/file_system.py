@@ -58,12 +58,14 @@ class S3FileSystem(FileSystem):
         key.set_contents_from_string(data)
 
     def list(self, path=''):
-        return [key.name for key in self.bucket.list(self.subdirectory + path)]
+        subdirlen = len(self.subdirectory)
+        return [key.name[subdirlen:] for key in self.bucket.list(self.subdirectory + path)]
 
     def list_name_modified(self, path=''):
         model_names_and_modified = {}
+        subdirlen = len(self.subdirectory)
         for key in self.bucket.list(self.subdirectory + path):
-            model_names_and_modified[key.name] = key.last_modified
+            model_names_and_modified[key.name[subdirlen:]] = key.last_modified
         return model_names_and_modified
 
     def remove(self, path):
