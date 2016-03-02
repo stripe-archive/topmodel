@@ -33,11 +33,12 @@ def make_points_far(xs, ys, thresholds, min_dist=0.03):
 
 def draw_labels(ax, xs, ys, thresholds, labels_left=False, y_value_only=False):
     font = matplotlib.font_manager.FontProperties(family='Tahoma', size=6)
+    if not thresholds:
+        thresholds = [None] * len(xs)
     for x, y, threshold in zip(xs, ys, thresholds):
         x_round = floor(x * 1000) / 1000
         y_round = floor(y * 1000) / 1000
-        if thresholds:
-            threshold_round = floor(threshold * 1000) / 1000
+        threshold_round = floor(threshold * 1000) / 1000 if threshold else 0
         coords = (x + 0.01, y)
         if labels_left:
             coords = (x - 0.190, y - 0.01)
@@ -162,7 +163,7 @@ def plot_absolute_score_histogram(thresholds, all_counts, xlabel, true_counts=No
     offset = [i + width for i in thresholds]
     if true_counts is not None:
         falses = [i - j for i, j in zip(all_counts, true_counts)]
-        plt.bar(offset, falses , width=width,
+        plt.bar(offset, falses, width=width,
                 log=False, label="False items")
         plt.bar(thresholds, true_counts, width=width,
                 log=False, color="purple", label="True items")
