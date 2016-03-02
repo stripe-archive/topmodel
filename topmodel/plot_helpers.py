@@ -31,17 +31,21 @@ def make_points_far(xs, ys, thresholds, min_dist=0.03):
     return (new_xs, new_ys, new_thresholds)
 
 
-def draw_labels(ax, xs, ys, thresholds, labels_left=False):
+def draw_labels(ax, xs, ys, thresholds, labels_left=False, y_value_only=False):
     font = matplotlib.font_manager.FontProperties(family='Tahoma', size=6)
     for x, y, threshold in zip(xs, ys, thresholds):
         x_round = floor(x * 1000) / 1000
         y_round = floor(y * 1000) / 1000
-        threshold_round = floor(threshold * 1000) / 1000
+        if thresholds:
+            threshold_round = floor(threshold * 1000) / 1000
         coords = (x + 0.01, y)
         if labels_left:
             coords = (x - 0.190, y - 0.01)
-        annotation = "{threshold}: [{x},{y}] ".format(x=x_round, y=y_round,
-                                                      threshold=threshold_round)
+        if y_value_only:
+            annotation = str(y_round)
+        else:
+            annotation = "{threshold}: [{x},{y}] ".format(x=x_round, y=y_round,
+                                                          threshold=threshold_round)
         ax.annotate(annotation, coords, fontproperties=font)
 
 
@@ -64,7 +68,7 @@ def plot_scatter(x, y, xlabel, ylabel, ax=None):
     return save_image()
 
 
-def plot_xy(xs, ys, thresholds, xlabel, ylabel, labels=True, labels_left=False,
+def plot_xy(xs, ys, thresholds, xlabel, ylabel, labels=True, labels_left=False, y_value_only=False,
             ax=None, xlim=(0, 1), ylim=(0, 1), autofmt_xdate=False, **plot_kwargs):
     if ax is None:
         fig, ax = plt.subplots()
@@ -79,7 +83,7 @@ def plot_xy(xs, ys, thresholds, xlabel, ylabel, labels=True, labels_left=False,
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     if labels:
-        draw_labels(ax, xs, ys, thresholds, labels_left=labels_left)
+        draw_labels(ax, xs, ys, thresholds, labels_left=labels_left, y_value_only=y_value_only)
     plt.tight_layout()
     return save_image()
 
