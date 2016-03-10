@@ -58,14 +58,15 @@ class S3FileSystem(FileSystem):
         if key is None:
             key = self.bucket.new_key(self.subdirectory + path)
 
-        # Take the data (a giant string of JSON), and turn it into a file
-        # stream we can read from
+        # Take the data (a giant string), and turn it into a file IO stream
+        # we can read from
         f = StringIO.StringIO()
         f.write(data)
         f.seek(0)
 
         # Count the number of chunks we're going to have to upload
         size = len(data)
+        # By default, set the chunk size to 50MB
         chunk_size = 1024 * 1024 * 50
         chunks = int(math.ceil(size/float(chunk_size)))
 
