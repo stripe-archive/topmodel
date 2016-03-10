@@ -76,7 +76,8 @@ class S3FileSystem(FileSystem):
             # Upload chunk by chunk, using the StringIO object instantiated above
             # we can reference the offset we want to upload.
             for i in range(chunks):
-                upload.upload_part_from_file(f, part_num=i+1)
+                bytes = min(chunk_size, size - (i * chunk_size))
+                upload.upload_part_from_file(f, part_num=i+1, size=bytes)
         except:
             upload.cancel_upload()
             raise
