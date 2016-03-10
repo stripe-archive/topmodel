@@ -1,5 +1,7 @@
 # File abstraction to allow both S3 and local to be used
 
+import StringIO
+import math
 import os
 import subprocess
 import time
@@ -55,7 +57,33 @@ class S3FileSystem(FileSystem):
         key = self.bucket.get_key(self.subdirectory + path)
         if key is None:
             key = self.bucket.new_key(self.subdirectory + path)
-        key.set_contents_from_string(data)
+
+        # Take the data (a giant string), and turn it into a file IO stream
+        # we can read from
+        f = StringIO.StringIO()
+        f.write(data)
+        f.seek(0)
+
+        # Count the number of chunks we're going to have to upload
+        size = len(data)
+        # By default, set the chunk size to 50MB
+        chunk_size = 1024 * 1024 * 50
+        chunks = int(math.ceil(size/float(chunk_size)))
+
+        # Start the multipart upload
+        upload = self.bucket.initiate_multipart_upload(key)
+
+        try:
+            # Upload chunk by chunk, using the StringIO object instantiated above
+            # we can reference the offset we want to upload.
+            for i in range(chunks):
+                bytes = min(chunk_size, size - (i * chunk_size))
+                upload.upload_part_from_file(f, part_num=i+1, size=bytes)
+        except:
+            upload.cancel_upload()
+            raise
+        else:
+            upload.complete_upload()
 
     def list(self, path=''):
         subdirlen = len(self.subdirectory)
