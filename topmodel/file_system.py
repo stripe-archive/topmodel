@@ -7,9 +7,10 @@ import subprocess
 import time
 
 # for s3 from python
-from boto.s3.connection import S3Connection
+from boto.s3 import connect_to_region
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_REGION = 'us-west-2'
 
 
 class FileSystem(object):
@@ -36,12 +37,15 @@ class S3FileSystem(FileSystem):
                  bucket_name,
                  aws_access_key_id,
                  aws_secret_access_key,
-                 security_token=None,
+                 region,
                  subdirectory=''):
-        conn = S3Connection(
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            security_token=security_token)
+        if region is None:
+            region = DEFAULT_REGION
+
+        conn = connect_to_region(
+                region,
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key)
         self.bucket = conn.get_bucket(bucket_name)
         self.subdirectory = subdirectory
         if subdirectory and not subdirectory.endswith('/'):
