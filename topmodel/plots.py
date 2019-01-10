@@ -27,7 +27,7 @@ def precision_recall_curve(cached_data, ax=None, fig=None, label=None):
     recall = [x['recalls'] for x in cached_data]
 
     image_data = plot_helpers.plot_xy_bootstrapped(
-        precision, recall, thresholds, 'precision', 'recall', fig=fig, ax=ax, label=label)
+        recall, precision, thresholds, 'recall', 'precision', fig=fig, ax=ax, label=label)
     return utf8_decode(image_data)
 
 
